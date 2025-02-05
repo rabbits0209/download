@@ -35,7 +35,7 @@ jobs:
         python main.py
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()  # 即使失败也上传
       with:
         name: downloaded-videos
