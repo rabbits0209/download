@@ -1,2 +1,2 @@
 # 格式：目标页面URL, 视频参数, [可选输出文件名]
-https://cn.pornhub.com/view_video.php?viewkey=ph6323a10d503e1, 1080P_4000K, downloads/sample.mp4
+https://cn.pornhub.com/view_video.php?viewkey=ph6323a10d503e1, 1080P_4000K
