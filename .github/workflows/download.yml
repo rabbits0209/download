@@ -31,7 +31,6 @@ jobs:
 
     - name: Run downloader
       run: |
-        mkdir -p downloads
         python main.py
 
     - name: Upload artifacts
