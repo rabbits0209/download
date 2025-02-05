@@ -20,18 +20,14 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
-
     - name: Install Python dependencies
       run: |
         pip install -r requirements.txt
 
-    - name: Run download script
-      run: python main.py  # 直接执行根目录下的 main.py
-      working-directory: ./  # 明确指定工作目录（可选，默认已是根目录）
+    - name: Run downloader
+      run: |
+        cd /home/runner/work/download/
+        python main.py
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
