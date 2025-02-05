@@ -1,9 +1,11 @@
 name: Video Downloader
 
 on:
-  workflow_dispatch:  # 允许手动触发
-  schedule:
-    - cron: '0 3 * * *'  # 每天 UTC 时间 3 点运行
+  push:
+    branches:
+      - main  # 当代码推送到 main 分支时触发
+    paths:
+      - 'download_list.txt'  # 只有 download_list.txt 文件变动时才运行（可选）
 
 jobs:
   download:
