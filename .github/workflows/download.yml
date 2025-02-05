@@ -1,0 +1,41 @@
+name: Video Downloader
+
+on:
+  workflow_dispatch:  # 允许手动触发
+  schedule:
+    - cron: '0 3 * * *'  # 每天 UTC 时间 3 点运行
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run downloader
+      run: |
+        mkdir -p downloads
+        python main.py
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      if: always()  # 即使失败也上传
+      with:
+        name: downloaded-videos
+        path: downloads/
+        retention-days: 1
