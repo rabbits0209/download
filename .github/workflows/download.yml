@@ -34,7 +34,7 @@ jobs:
       with:
         account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        bucket-name: your-bucket-name
+        bucket-name: hub
         key: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
         secret: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
         path: downloads/
