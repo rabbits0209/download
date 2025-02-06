@@ -3,14 +3,14 @@ name: Video Downloader
 on:
   push:
     branches:
-      - main  # 当代码推送到 main 分支时触发
+      - main
     paths:
-      - 'download_list.txt'  # 只有 download_list.txt 文件变动时才运行（可选）
+      - 'download_list.txt'
 
 jobs:
   download:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -28,6 +28,16 @@ jobs:
       run: |
         mkdir -p downloads
         python main.py
+
+    - name: Upload to Cloudflare R2
+      uses: cloudflare/r2-credential-upload@v1
+      with:
+        account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        bucket-name: your-bucket-name
+        key: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
+        secret: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
+        path: downloads/
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
