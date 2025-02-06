@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>视频下载任务提交</title>
+    <style>
+        /* 保持原有样式不变 */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background-color: #f9f9f9; color: #333; }
+        h1 { text-align: center; color: #2ea44f; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        input:focus, select:focus { border-color: #2ea44f; outline: none; }
+        button { background: #2ea44f; color: white; border: none; padding: 10px 20px; font-size: 14px; border-radius: 5px; cursor: pointer; transition: background 0.3s ease; }
+        button:hover { background: #22863a; }
+        .status-box { margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .status-box h2 { margin-top: 0; color: #2ea44f; }
+        .artifact-list { list-style: none; padding: 0; }
+        .artifact-list li { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+        .artifact-list a { color: #0366d6; text-decoration: none; font-weight: bold; }
+        .artifact-list a:hover { text-decoration: underline; }
+        .loading { text-align: center; color: #888; }
+        .error { color: #dc3545; font-weight: bold; }
+        .refresh-button { margin-left: 10px; background: #0366d6; }
+        .refresh-button:hover { background: #024ea3; }
+        .artifact-time { font-size: 12px; color: #777; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>提交下载任务</h1>
+    <form id="downloadForm">
+        <div class="form-group">
+            <label>视频页面URL：</label>
+            <input type="url" id="targetUrl" required placeholder="https://example.com/view_video.php?viewkey=...">
+        </div>
+
+        <div class="form-group">
+            <label>选择视频参数：</label>
+            <select id="presetParam">
+                <option value="1080P_4000K">1080P (4000K)</option>
+                <option value="720P_4000K">720P (4000K)</option>
+                <option value="480P_2000K">480P (2000K)</option>
+                <option value="240P_1000K">240P (1000K)</option>
+                <option value="custom">自定义参数</option>
+            </select>
+            <input type="text" id="customParam" style="display: none;" placeholder="输入自定义参数">
+        </div>
+
+        <div class="form-group">
+            <label>自定义文件名（可选）：</label>
+            <input type="text" id="customName" placeholder="output.mp4">
+        </div>
+
+        <button type="submit">提交下载任务</button>
+    </form>
+
+    <div class="status-box">
+        <h2>最近部署状态 <button class="refresh-button" onclick="init()">刷新</button></h2>
+        <p id="workflowStatus" class="loading">正在加载状态...</p>
+        <h3>Artifacts</h3>
+        <ul id="artifactList" class="artifact-list">
+            <li class="loading">正在加载 Artifacts...</li>
+        </ul>
+    </div>
+
+    <script>
+        const repo = "rabbits0209/download";
+        const workflowsApiUrl = `https://api.github.com/repos/${repo}/actions/runs`;
+        const artifactsApiUrl = `https://api.github.com/repos/${repo}/actions/artifacts`;
+        const GITHUB_TOKEN = "ghp_xxxxxxxxxxxxxxxx"; // 在此处替换你的真实Token
+
+        async function fetchLatestWorkflowStatus() {
+            try {
+                const response = await fetch(workflowsApiUrl, {
+                    headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
+                });
+                if (!response.ok) throw new Error("无法获取工作流状态");
+                const data = await response.json();
+                const latestRun = data.workflow_runs[0];
+                const statusText = `工作流状态: ${latestRun.status} (${latestRun.conclusion || "运行中"})`;
+                document.getElementById('workflowStatus').innerText = statusText;
+                document.getElementById('workflowStatus').className = '';
+                return latestRun.id;
+            } catch (err) {
+                document.getElementById('workflowStatus').innerText = `错误: ${err.message}`;
+                document.getElementById('workflowStatus').className = 'error';
+                return null;
+            }
+        }
+
+        async function fetchArtifacts() {
+            try {
+                const response = await fetch(artifactsApiUrl, {
+                    headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
+                });
+                if (!response.ok) throw new Error("无法获取 Artifacts");
+                const data = await response.json();
+                const artifacts = data.artifacts;
+                const artifactList = document.getElementById('artifactList');
+                artifactList.innerHTML = '';
+                if (artifacts.length === 0) {
+                    artifactList.innerHTML = '<li>没有可用的 Artifacts</li>';
+                } else {
+                    artifacts.forEach(artifact => {
+                        const listItem = document.createElement('li');
+                        const downloadLink = document.createElement('a');
+                        downloadLink.onclick = async () => {
+                            const res = await fetch(artifact.archive_download_url, {
+                                headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
+                            });
+                            if (res.redirected) window.open(res.url, '_blank');
+                        };
+                        downloadLink.style.cursor = "pointer";
+                        downloadLink.innerText = artifact.name;
+
+                        const artifactTime = document.createElement('span');
+                        artifactTime.className = 'artifact-time';
+                        artifactTime.innerText = new Date(artifact.created_at).toLocaleString();
+
+                        listItem.appendChild(downloadLink);
+                        listItem.appendChild(artifactTime);
+                        artifactList.appendChild(listItem);
+                    });
+                }
+            } catch (err) {
+                document.getElementById('artifactList').innerHTML = `<li class="error">错误: ${err.message}</li>`;
+            }
+        }
+
+        async function init() {
+            try {
+                const runId = await fetchLatestWorkflowStatus();
+                if (runId) await fetchArtifacts();
+            } catch (err) {
+                console.error('初始化失败:', err);
+            }
+        }
+
+        document.getElementById('downloadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const targetUrl = document.getElementById('targetUrl').value;
+            const presetParam = document.getElementById('presetParam').value;
+            const customParam = document.getElementById('customParam').value;
+            const customName = document.getElementById('customName').value;
+
+            const finalParam = presetParam === 'custom' ? customParam : presetParam;
+            const line = [
+                targetUrl,
+                finalParam,
+                ...(customName ? [customName] : [])
+            ].join(', ');
+
+            try {
+                const response = await updateGitHubFile(line);
+                if (response.ok) {
+                    alert('任务提交成功！下载将在后台启动');
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message);
+                }
+            } catch (err) {
+                alert(`提交失败: ${err.message}`);
+            }
+            await init();
+        });
+
+        async function updateGitHubFile(newLine) {
+            const apiUrl = `https://api.github.com/repos/${repo}/contents/download_list.txt`;
+            const getFile = await fetch(apiUrl, {
+                headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
+            });
+            
+            let sha = '';
+            if (getFile.ok) {
+                const fileData = await getFile.json();
+                sha = fileData.sha;
+            }
+
+            return fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'Add new download task',
+                    content: btoa(newLine + '\n'),
+                    sha: sha || undefined
+                })
+            });
+        }
+
+        // 初始化页面
+        document.getElementById('presetParam').addEventListener('change', function(e) {
+            document.getElementById('customParam').style.display = 
+                e.target.value === 'custom' ? 'block' : 'none';
+        });
+
+        // 页面加载时自动初始化
+        window.onload = init;
+    </script>
+</body>
+</html>
