@@ -30,7 +30,7 @@ jobs:
         python main.py
 
     - name: Upload to Cloudflare R2
-      uses: cloudflare/r2-credential-upload@v1
+      uses: cloudflare/r2-credential-upload@v2
       with:
         account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
