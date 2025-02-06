@@ -36,7 +36,7 @@ jobs:
         r2-secret-access-key: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
         r2-bucket: hub
         source-dir: src
-        destination-dir: ./downloads/
+        destination-dir: downloads/
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
